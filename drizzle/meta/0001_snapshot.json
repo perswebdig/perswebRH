@@ -1,0 +1,1838 @@
+{
+  "version": "5",
+  "dialect": "mysql",
+  "id": "3dc4da67-6f9d-4257-9643-4819c96a274a",
+  "prevId": "bd95a85e-2e49-4cb4-b28f-de49c4dd772f",
+  "tables": {
+    "approval_rules": {
+      "name": "approval_rules",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "categoryId": {
+          "name": "categoryId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "approverLabel": {
+          "name": "approverLabel",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "assignedMembershipId": {
+          "name": "assignedMembershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "minAmount": {
+          "name": "minAmount",
+          "type": "decimal(12,2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "maxAmount": {
+          "name": "maxAmount",
+          "type": "decimal(12,2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "priority": {
+          "name": "priority",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 10
+        },
+        "active": {
+          "name": "active",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        }
+      },
+      "indexes": {
+        "approval_rules_tenant_priority_idx": {
+          "name": "approval_rules_tenant_priority_idx",
+          "columns": [
+            "tenantId",
+            "priority"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "approval_rules_tenantId_tenants_id_fk": {
+          "name": "approval_rules_tenantId_tenants_id_fk",
+          "tableFrom": "approval_rules",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "approval_rules_categoryId_expense_categories_id_fk": {
+          "name": "approval_rules_categoryId_expense_categories_id_fk",
+          "tableFrom": "approval_rules",
+          "tableTo": "expense_categories",
+          "columnsFrom": [
+            "categoryId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "approval_rules_assignedMembershipId_memberships_id_fk": {
+          "name": "approval_rules_assignedMembershipId_memberships_id_fk",
+          "tableFrom": "approval_rules",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "assignedMembershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "approval_rules_id": {
+          "name": "approval_rules_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "approval_steps": {
+      "name": "approval_steps",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reimbursementId": {
+          "name": "reimbursementId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sequence": {
+          "name": "sequence",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "approverMembershipId": {
+          "name": "approverMembershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "approverLabel": {
+          "name": "approverLabel",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('pending','approved','rejected','skipped')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'pending'"
+        },
+        "note": {
+          "name": "note",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "decidedAt": {
+          "name": "decidedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "approval_steps_tenant_request_idx": {
+          "name": "approval_steps_tenant_request_idx",
+          "columns": [
+            "tenantId",
+            "reimbursementId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "approval_steps_tenantId_tenants_id_fk": {
+          "name": "approval_steps_tenantId_tenants_id_fk",
+          "tableFrom": "approval_steps",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "approval_steps_reimbursementId_reimbursements_id_fk": {
+          "name": "approval_steps_reimbursementId_reimbursements_id_fk",
+          "tableFrom": "approval_steps",
+          "tableTo": "reimbursements",
+          "columnsFrom": [
+            "reimbursementId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "approval_steps_approverMembershipId_memberships_id_fk": {
+          "name": "approval_steps_approverMembershipId_memberships_id_fk",
+          "tableFrom": "approval_steps",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "approverMembershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "approval_steps_id": {
+          "name": "approval_steps_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "departments": {
+      "name": "departments",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "departments_tenant_name_unique": {
+          "name": "departments_tenant_name_unique",
+          "columns": [
+            "tenantId",
+            "name"
+          ],
+          "isUnique": true
+        },
+        "departments_tenant_idx": {
+          "name": "departments_tenant_idx",
+          "columns": [
+            "tenantId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "departments_tenantId_tenants_id_fk": {
+          "name": "departments_tenantId_tenants_id_fk",
+          "tableFrom": "departments",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "departments_id": {
+          "name": "departments_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "expense_attachments": {
+      "name": "expense_attachments",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reimbursementId": {
+          "name": "reimbursementId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "itemId": {
+          "name": "itemId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "uploadedByMembershipId": {
+          "name": "uploadedByMembershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "objectKey": {
+          "name": "objectKey",
+          "type": "varchar(512)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "originalName": {
+          "name": "originalName",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "contentType": {
+          "name": "contentType",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "sizeBytes": {
+          "name": "sizeBytes",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "expense_attachments_tenant_request_idx": {
+          "name": "expense_attachments_tenant_request_idx",
+          "columns": [
+            "tenantId",
+            "reimbursementId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "expense_attachments_tenantId_tenants_id_fk": {
+          "name": "expense_attachments_tenantId_tenants_id_fk",
+          "tableFrom": "expense_attachments",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "expense_attachments_reimbursementId_reimbursements_id_fk": {
+          "name": "expense_attachments_reimbursementId_reimbursements_id_fk",
+          "tableFrom": "expense_attachments",
+          "tableTo": "reimbursements",
+          "columnsFrom": [
+            "reimbursementId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "expense_attachments_itemId_expense_items_id_fk": {
+          "name": "expense_attachments_itemId_expense_items_id_fk",
+          "tableFrom": "expense_attachments",
+          "tableTo": "expense_items",
+          "columnsFrom": [
+            "itemId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "expense_attachments_uploadedByMembershipId_memberships_id_fk": {
+          "name": "expense_attachments_uploadedByMembershipId_memberships_id_fk",
+          "tableFrom": "expense_attachments",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "uploadedByMembershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "expense_attachments_id": {
+          "name": "expense_attachments_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "expense_categories": {
+      "name": "expense_categories",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "limitAmount": {
+          "name": "limitAmount",
+          "type": "decimal(12,2)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "active": {
+          "name": "active",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "expense_categories_tenant_name_unique": {
+          "name": "expense_categories_tenant_name_unique",
+          "columns": [
+            "tenantId",
+            "name"
+          ],
+          "isUnique": true
+        },
+        "expense_categories_tenant_idx": {
+          "name": "expense_categories_tenant_idx",
+          "columns": [
+            "tenantId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "expense_categories_tenantId_tenants_id_fk": {
+          "name": "expense_categories_tenantId_tenants_id_fk",
+          "tableFrom": "expense_categories",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "expense_categories_id": {
+          "name": "expense_categories_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "expense_items": {
+      "name": "expense_items",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "reimbursementId": {
+          "name": "reimbursementId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "categoryId": {
+          "name": "categoryId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(240)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "amount": {
+          "name": "amount",
+          "type": "decimal(12,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "expenseDate": {
+          "name": "expenseDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "expense_items_tenant_request_idx": {
+          "name": "expense_items_tenant_request_idx",
+          "columns": [
+            "tenantId",
+            "reimbursementId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "expense_items_tenantId_tenants_id_fk": {
+          "name": "expense_items_tenantId_tenants_id_fk",
+          "tableFrom": "expense_items",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "expense_items_reimbursementId_reimbursements_id_fk": {
+          "name": "expense_items_reimbursementId_reimbursements_id_fk",
+          "tableFrom": "expense_items",
+          "tableTo": "reimbursements",
+          "columnsFrom": [
+            "reimbursementId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "expense_items_categoryId_expense_categories_id_fk": {
+          "name": "expense_items_categoryId_expense_categories_id_fk",
+          "tableFrom": "expense_items",
+          "tableTo": "expense_categories",
+          "columnsFrom": [
+            "categoryId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "expense_items_id": {
+          "name": "expense_items_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "memberships": {
+      "name": "memberships",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "userId": {
+          "name": "userId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(160)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "enum('tenant_admin','manager','employee','finance','administrative')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'employee'"
+        },
+        "departmentId": {
+          "name": "departmentId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "managerMembershipId": {
+          "name": "managerMembershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "active": {
+          "name": "active",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 1
+        },
+        "invitedAt": {
+          "name": "invitedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "joinedAt": {
+          "name": "joinedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "memberships_tenant_user_unique": {
+          "name": "memberships_tenant_user_unique",
+          "columns": [
+            "tenantId",
+            "userId"
+          ],
+          "isUnique": true
+        },
+        "memberships_tenant_email_unique": {
+          "name": "memberships_tenant_email_unique",
+          "columns": [
+            "tenantId",
+            "email"
+          ],
+          "isUnique": true
+        },
+        "memberships_user_idx": {
+          "name": "memberships_user_idx",
+          "columns": [
+            "userId"
+          ],
+          "isUnique": false
+        },
+        "memberships_tenant_idx": {
+          "name": "memberships_tenant_idx",
+          "columns": [
+            "tenantId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "memberships_tenantId_tenants_id_fk": {
+          "name": "memberships_tenantId_tenants_id_fk",
+          "tableFrom": "memberships",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "memberships_userId_users_id_fk": {
+          "name": "memberships_userId_users_id_fk",
+          "tableFrom": "memberships",
+          "tableTo": "users",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "memberships_departmentId_departments_id_fk": {
+          "name": "memberships_departmentId_departments_id_fk",
+          "tableFrom": "memberships",
+          "tableTo": "departments",
+          "columnsFrom": [
+            "departmentId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "memberships_id": {
+          "name": "memberships_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "reimbursements": {
+      "name": "reimbursements",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "membershipId": {
+          "name": "membershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "title": {
+          "name": "title",
+          "type": "varchar(180)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('draft','submitted','in_approval','approved','paid','rejected')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'draft'"
+        },
+        "totalAmount": {
+          "name": "totalAmount",
+          "type": "decimal(12,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'0.00'"
+        },
+        "currentApproverMembershipId": {
+          "name": "currentApproverMembershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paymentMembershipId": {
+          "name": "paymentMembershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "rejectionReason": {
+          "name": "rejectionReason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "submittedAt": {
+          "name": "submittedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "approvedAt": {
+          "name": "approvedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "paidAt": {
+          "name": "paidAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "reimbursements_tenant_status_idx": {
+          "name": "reimbursements_tenant_status_idx",
+          "columns": [
+            "tenantId",
+            "status"
+          ],
+          "isUnique": false
+        },
+        "reimbursements_tenant_member_idx": {
+          "name": "reimbursements_tenant_member_idx",
+          "columns": [
+            "tenantId",
+            "membershipId"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "reimbursements_tenantId_tenants_id_fk": {
+          "name": "reimbursements_tenantId_tenants_id_fk",
+          "tableFrom": "reimbursements",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reimbursements_membershipId_memberships_id_fk": {
+          "name": "reimbursements_membershipId_memberships_id_fk",
+          "tableFrom": "reimbursements",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "membershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "reimbursements_currentApproverMembershipId_memberships_id_fk": {
+          "name": "reimbursements_currentApproverMembershipId_memberships_id_fk",
+          "tableFrom": "reimbursements",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "currentApproverMembershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "reimbursements_paymentMembershipId_memberships_id_fk": {
+          "name": "reimbursements_paymentMembershipId_memberships_id_fk",
+          "tableFrom": "reimbursements",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "paymentMembershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "reimbursements_id": {
+          "name": "reimbursements_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "tenant_audit_logs": {
+      "name": "tenant_audit_logs",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "actorMembershipId": {
+          "name": "actorMembershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "entityType": {
+          "name": "entityType",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "entityId": {
+          "name": "entityId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "action": {
+          "name": "action",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "metadata": {
+          "name": "metadata",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "tenant_audit_created_idx": {
+          "name": "tenant_audit_created_idx",
+          "columns": [
+            "tenantId",
+            "createdAt"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "tenant_audit_logs_tenantId_tenants_id_fk": {
+          "name": "tenant_audit_logs_tenantId_tenants_id_fk",
+          "tableFrom": "tenant_audit_logs",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "tenant_audit_logs_actorMembershipId_memberships_id_fk": {
+          "name": "tenant_audit_logs_actorMembershipId_memberships_id_fk",
+          "tableFrom": "tenant_audit_logs",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "actorMembershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "tenant_audit_logs_id": {
+          "name": "tenant_audit_logs_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "tenants": {
+      "name": "tenants",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "name": {
+          "name": "name",
+          "type": "varchar(160)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "slug": {
+          "name": "slug",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customDomain": {
+          "name": "customDomain",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "timezone": {
+          "name": "timezone",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'America/Sao_Paulo'"
+        },
+        "currency": {
+          "name": "currency",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'BRL'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "tenants_slug_unique": {
+          "name": "tenants_slug_unique",
+          "columns": [
+            "slug"
+          ],
+          "isUnique": true
+        },
+        "tenants_custom_domain_unique": {
+          "name": "tenants_custom_domain_unique",
+          "columns": [
+            "customDomain"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "tenants_id": {
+          "name": "tenants_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "users": {
+      "name": "users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "openId": {
+          "name": "openId",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(320)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "loginMethod": {
+          "name": "loginMethod",
+          "type": "varchar(64)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "role": {
+          "name": "role",
+          "type": "enum('user','admin')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'user'"
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        },
+        "lastSignedIn": {
+          "name": "lastSignedIn",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "users_id": {
+          "name": "users_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "users_openId_unique": {
+          "name": "users_openId_unique",
+          "columns": [
+            "openId"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    },
+    "work_entries": {
+      "name": "work_entries",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "periodId": {
+          "name": "periodId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "membershipId": {
+          "name": "membershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "workDate": {
+          "name": "workDate",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "startedAt": {
+          "name": "startedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "endedAt": {
+          "name": "endedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "activity": {
+          "name": "activity",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "markType": {
+          "name": "markType",
+          "type": "varchar(80)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'Entrada'"
+        },
+        "project": {
+          "name": "project",
+          "type": "varchar(160)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "costCenter": {
+          "name": "costCenter",
+          "type": "varchar(120)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "locationMode": {
+          "name": "locationMode",
+          "type": "enum('preset','geolocation','manual')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'preset'"
+        },
+        "locationName": {
+          "name": "locationName",
+          "type": "varchar(180)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "latitude": {
+          "name": "latitude",
+          "type": "double",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "longitude": {
+          "name": "longitude",
+          "type": "double",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "customFields": {
+          "name": "customFields",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "work_entries_tenant_period_idx": {
+          "name": "work_entries_tenant_period_idx",
+          "columns": [
+            "tenantId",
+            "periodId"
+          ],
+          "isUnique": false
+        },
+        "work_entries_tenant_member_date_idx": {
+          "name": "work_entries_tenant_member_date_idx",
+          "columns": [
+            "tenantId",
+            "membershipId",
+            "workDate"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "work_entries_tenantId_tenants_id_fk": {
+          "name": "work_entries_tenantId_tenants_id_fk",
+          "tableFrom": "work_entries",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "work_entries_periodId_work_periods_id_fk": {
+          "name": "work_entries_periodId_work_periods_id_fk",
+          "tableFrom": "work_entries",
+          "tableTo": "work_periods",
+          "columnsFrom": [
+            "periodId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "work_entries_membershipId_memberships_id_fk": {
+          "name": "work_entries_membershipId_memberships_id_fk",
+          "tableFrom": "work_entries",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "membershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "work_entries_id": {
+          "name": "work_entries_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "work_periods": {
+      "name": "work_periods",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "membershipId": {
+          "name": "membershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "periodStart": {
+          "name": "periodStart",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "periodEnd": {
+          "name": "periodEnd",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "enum('draft','submitted','approved','rejected')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'draft'"
+        },
+        "managerNote": {
+          "name": "managerNote",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reviewedByMembershipId": {
+          "name": "reviewedByMembershipId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "submittedAt": {
+          "name": "submittedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "reviewedAt": {
+          "name": "reviewedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "createdAt": {
+          "name": "createdAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "work_periods_tenant_member_period_unique": {
+          "name": "work_periods_tenant_member_period_unique",
+          "columns": [
+            "tenantId",
+            "membershipId",
+            "periodStart"
+          ],
+          "isUnique": true
+        },
+        "work_periods_tenant_status_idx": {
+          "name": "work_periods_tenant_status_idx",
+          "columns": [
+            "tenantId",
+            "status"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {
+        "work_periods_tenantId_tenants_id_fk": {
+          "name": "work_periods_tenantId_tenants_id_fk",
+          "tableFrom": "work_periods",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "work_periods_membershipId_memberships_id_fk": {
+          "name": "work_periods_membershipId_memberships_id_fk",
+          "tableFrom": "work_periods",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "membershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "work_periods_reviewedByMembershipId_memberships_id_fk": {
+          "name": "work_periods_reviewedByMembershipId_memberships_id_fk",
+          "tableFrom": "work_periods",
+          "tableTo": "memberships",
+          "columnsFrom": [
+            "reviewedByMembershipId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "work_periods_id": {
+          "name": "work_periods_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "work_settings": {
+      "name": "work_settings",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tenantId": {
+          "name": "tenantId",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "dailyHours": {
+          "name": "dailyHours",
+          "type": "decimal(4,2)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'8.00'"
+        },
+        "toleranceMinutes": {
+          "name": "toleranceMinutes",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": 10
+        },
+        "shiftStart": {
+          "name": "shiftStart",
+          "type": "varchar(5)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'09:00'"
+        },
+        "markTypes": {
+          "name": "markTypes",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "customFields": {
+          "name": "customFields",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "locations": {
+          "name": "locations",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "onUpdate": true,
+          "default": "(now())"
+        }
+      },
+      "indexes": {
+        "work_settings_tenant_unique": {
+          "name": "work_settings_tenant_unique",
+          "columns": [
+            "tenantId"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "work_settings_tenantId_tenants_id_fk": {
+          "name": "work_settings_tenantId_tenants_id_fk",
+          "tableFrom": "work_settings",
+          "tableTo": "tenants",
+          "columnsFrom": [
+            "tenantId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "work_settings_id": {
+          "name": "work_settings_id",
+          "columns": [
+            "id"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    }
+  },
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {},
+    "indexes": {}
+  }
+}

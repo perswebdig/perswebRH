@@ -1,0 +1,41 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1788785580464,
+      "tag": "0000_initial_users",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1793208860362,
+      "tag": "0001_volatile_kitty_pryde",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1793209801176,
+      "tag": "0002_perfect_centennial",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1793430133116,
+      "tag": "0003_low_arclight",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1793460976890,
+      "tag": "0004_sticky_james_howlett",
+      "breakpoints": true
+    }
+  ]
+}
