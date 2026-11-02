@@ -29,6 +29,7 @@ import { trpc } from "@/lib/trpc";
 import { Attendance } from "./attendance";
 import { Reimbursements } from "./reimbursements";
 import { AdminSettings } from "./settings";
+import { BillingSettings } from "./billing";
 
 type User = {
   id: number;
@@ -55,6 +56,7 @@ type Section =
   | "reports"
   | "team"
   | "settings"
+  | "billing"
   | "platform";
 
 const sectionMeta: Record<
@@ -68,6 +70,7 @@ const sectionMeta: Record<
   reports: { label: "Relatórios", icon: FileBarChart2, mobile: "Dados" },
   team: { label: "Equipe", icon: Users, mobile: "Equipe" },
   settings: { label: "Configurações", icon: Settings2, mobile: "Ajustes" },
+  billing: { label: "Cobrança", icon: WalletCards, mobile: "Plano" },
   platform: { label: "Plataforma", icon: Building2, mobile: "Plataforma" },
 };
 const roleLabels: Record<string, string> = {
@@ -182,7 +185,7 @@ export default function OrbitWorkspace({
     "reimbursements",
     "reports",
     ...(admin || manager ? ["team" as const] : []),
-    ...(admin ? ["settings" as const] : []),
+    ...(admin ? ["settings" as const, "billing" as const] : []),
     ...(platformAdmin ? ["platform" as const] : []),
   ];
   const changeSection = (next: Section) => {
@@ -696,6 +699,16 @@ export default function OrbitWorkspace({
                 Somente administradores da empresa podem alterar as
                 configurações.
               </p>
+            </div>
+          )}
+          {section === "billing" && admin && (
+            <BillingSettings tenantId={tenant.tenantId} />
+          )}
+          {section === "billing" && !admin && (
+            <div className="panel empty-state">
+              <ShieldCheck size={24} />
+              <h2>Acesso restrito</h2>
+              <p>Somente administradores da empresa gerenciam a assinatura.</p>
             </div>
           )}
         </div>
@@ -1367,6 +1380,9 @@ function TeamView({
   departments: { id: number; name: string }[];
   onGoSettings: () => void;
 }) {
+  const billingSummary = trpc.billing.overview.useQuery({ tenantId });
+  const billable = billingSummary.data?.headcount;
+  const seatLimit = billingSummary.data?.plan.seatLimit;
   return (
     <section className="page-content">
       <div className="page-heading">
@@ -1400,6 +1416,19 @@ function TeamView({
             <small>departamentos</small>
           </div>
         </div>
+        {billable !== undefined && seatLimit !== undefined && (
+          <div className="panel team-summary-card">
+            <span className="stat-icon">
+              <WalletCards size={18} />
+            </span>
+            <div>
+              <b>
+                {billable} de {seatLimit}
+              </b>
+              <small>funcionários faturáveis · {billingSummary.data?.plan.priceLabel}/mês</small>
+            </div>
+          </div>
+        )}
       </div>
       <div className="panel table-panel">
         <div className="panel-head">

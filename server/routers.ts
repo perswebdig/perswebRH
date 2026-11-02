@@ -3,6 +3,8 @@ import { systemRouter } from "./_core/systemRouter";
 import { authRouter } from "./routers/auth";
 import { tenantsRouter } from "./routers/tenants";
 import { attendanceRouter } from "./routers/attendance";
+import { punchRouter } from "./routers/punch";
+import { billingRouter } from "./routers/billing";
 import { reimbursementsRouter } from "./routers/reimbursements";
 import { importsRouter } from "./routers/imports";
 import { signaturesRouter } from "./routers/signatures";
@@ -13,6 +15,8 @@ export const appRouter = router({
   auth: authRouter,
   tenants: tenantsRouter,
   attendance: attendanceRouter,
+  punch: punchRouter,
+  billing: billingRouter,
   reimbursements: reimbursementsRouter,
   imports: importsRouter,
   signatures: signaturesRouter,

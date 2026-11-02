@@ -128,7 +128,8 @@ export async function tenantAccess(
   db: Awaited<ReturnType<typeof database>>,
   user: User,
   tenantId: number,
-  allowed?: readonly TenantRole[]
+  allowed?: readonly TenantRole[],
+  opts?: { skipEntitlement?: boolean }
 ) {
   const member = await memberFor(db, user, tenantId);
   if (allowed && !allowed.includes(member.role))
@@ -136,6 +137,13 @@ export async function tenantAccess(
       code: "FORBIDDEN",
       message: "Seu perfil não pode realizar esta ação.",
     });
+  if (!opts?.skipEntitlement) {
+    const { resolveAccess, assertAccessAllowed } = await import(
+      "../billing/core"
+    );
+    const access = await resolveAccess(db, tenantId);
+    assertAccessAllowed(access);
+  }
   return member;
 }
 

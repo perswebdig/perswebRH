@@ -13,6 +13,7 @@ import {
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
 import OrbitWorkspace from "@/features/OrbitWorkspace";
+import { BillingScreen } from "@/features/billing";
 
 function slugify(value: string) {
   return value
@@ -86,8 +87,22 @@ export default function Home() {
     () => tenants.find(t => t.tenantId === selectedTenantId),
     [tenants, selectedTenantId]
   );
+  const billing = trpc.billing.overview.useQuery(
+    { tenantId: activeTenant?.tenantId ?? 0 },
+    { enabled: Boolean(activeTenant), retry: false }
+  );
+  const publicPlans = trpc.billing.plans.useQuery(undefined, {
+    enabled: !signedIn,
+  });
+  const blocked =
+    billing.data &&
+    ["blocked_trial_ended", "blocked_payment_failed", "blocked_period_ended", "canceled"].includes(
+      billing.data.accessStatus
+    );
 
   if (auth.isLoading || (signedIn && tenantQuery.isLoading))
+    return <LoadingScreen />;
+  if (signedIn && activeTenant && billing.isLoading)
     return <LoadingScreen />;
   if (!auth.data) {
     const localAuth = authMode.data?.localAuth ?? false;
@@ -254,6 +269,24 @@ export default function Home() {
         <div className="auth-foot">
           Pers Web RH <span>•</span> Gestão humana, sem ruído
         </div>
+        <div className="auth-plans">
+          {(publicPlans.data?.plans ?? []).map(
+            plan => (
+              <div className="auth-plan" key={plan.id}>
+                <b>{plan.name}</b>
+                <span>
+                  {plan.priceLabel}
+                  <small>/mês</small>
+                </span>
+                <small>até {plan.maxEmployees} funcionários</small>
+              </div>
+            )
+          )}
+          <small className="auth-plans-note">
+            14 dias de teste grátis, sem cartão. Acesso liberado automaticamente
+            após confirmação do pagamento.
+          </small>
+        </div>
       </main>
     );
   }
@@ -403,6 +436,18 @@ export default function Home() {
           </button>
         </div>
       </main>
+    );
+  }
+
+  if (blocked && activeTenant) {
+    return (
+      <BillingScreen
+        tenantId={activeTenant.tenantId}
+        onActivated={() => {
+          void billing.refetch();
+          void tenantQuery.refetch();
+        }}
+      />
     );
   }
 

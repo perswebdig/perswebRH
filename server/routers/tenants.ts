@@ -129,7 +129,12 @@ export const tenantsRouter = router({
           code: "BAD_REQUEST",
           message: "Sua conta precisa ter um e-mail para criar uma empresa.",
         });
+      const { trialDays } = await import("../billing/core");
       const db = await database();
+      const trialLength = await trialDays(db);
+      const trialEndsAt = new Date(
+        Date.now() + trialLength * 24 * 60 * 60 * 1000
+      );
       const [tenant] = await db
         .insert(tenants)
         .values({ name: input.name, slug: input.slug })
@@ -160,12 +165,12 @@ export const tenantsRouter = router({
         { tenantId: tenant.id, name: "Transporte", limitAmount: "500.00" },
         { tenantId: tenant.id, name: "Hospedagem", limitAmount: "1200.00" },
       ]);
-      const trialEndsAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000);
       await db.insert(tenantSubscriptions).values({
         tenantId: tenant.id,
         plan: "starter",
         status: "trialing",
         seatLimit: plans.starter.seatLimit,
+        priceCents: plans.starter.monthlyPriceCents,
         trialEndsAt,
         currentPeriodEnd: trialEndsAt,
       });
@@ -609,13 +614,15 @@ export const tenantsRouter = router({
         .where(eq(tenantSubscriptions.tenantId, input.tenantId))
         .limit(1);
       const seatLimit = subscription?.seatLimit ?? plans.starter.seatLimit;
+      // Billable headcount: only accepted, active accounts count.
       const [seatCount] = await db
         .select({ total: count() })
         .from(memberships)
         .where(
           and(
             eq(memberships.tenantId, input.tenantId),
-            eq(memberships.active, 1)
+            eq(memberships.active, 1),
+            isNotNull(memberships.userId)
           )
         );
       if ((seatCount?.total ?? 0) >= seatLimit)

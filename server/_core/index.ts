@@ -8,6 +8,7 @@ import { serveStatic, setupVite } from "./vite";
 import { ENV } from "./env";
 import path from "node:path";
 import { registerApiV1 } from "./apiV1";
+import { registerBillingWebhook } from "../billing/webhook";
 
 async function startServer() {
   const app = express();
@@ -48,6 +49,7 @@ async function startServer() {
     });
   });
   registerApiV1(app);
+  registerBillingWebhook(app);
   app.use(
     "/api/trpc",
     createExpressMiddleware({

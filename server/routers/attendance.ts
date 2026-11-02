@@ -237,13 +237,31 @@ export const attendanceRouter = router({
     .mutation(async ({ ctx, input }) => {
       const user = requireActor(ctx.user);
       const db = await database();
-      const member = await tenantAccess(db, user, input.tenantId);
+      // Administrative correction only: employees use the real-time punch flow.
+      const member = await tenantAccess(db, user, input.tenantId, canManage);
       const { start, end, period, settings } = await validateEntry(
         db,
         input.tenantId,
         member.id,
         input
       );
+      const [tenant] = await db
+        .select({ timezone: tenants.timezone })
+        .from(tenants)
+        .where(eq(tenants.id, input.tenantId))
+        .limit(1);
+      const timezone = tenant?.timezone ?? "America/Sao_Paulo";
+      const now = new Date();
+      if (input.workDate > dateInTimezone(now, timezone))
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Não é possível registrar faixa em data futura.",
+        });
+      if (end > now)
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "O horário final informado ainda não aconteceu.",
+        });
       const [id] = await db
         .insert(workEntries)
         .values({
@@ -271,6 +289,7 @@ export const attendanceRouter = router({
               ? (input.longitude ?? null)
               : null,
           customFields: input.customFields ?? {},
+          source: "admin_correction",
         })
         .$returningId();
       await audit(
@@ -279,7 +298,7 @@ export const attendanceRouter = router({
         member.id,
         "work_entry",
         id.id,
-        "created"
+        "created_admin"
       );
       return { id: id.id };
     }),
@@ -301,6 +320,12 @@ export const attendanceRouter = router({
         )
         .limit(1);
       if (!entry) throw new TRPCError({ code: "NOT_FOUND" });
+      if (entry.source !== "manual")
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Faixas geradas por marcação de ponto não podem ser editadas. Solicite um ajuste.",
+        });
       const { start, end, period, settings } = await validateEntry(
         db,
         input.tenantId,
@@ -368,6 +393,12 @@ export const attendanceRouter = router({
         )
         .limit(1);
       if (!entry) throw new TRPCError({ code: "NOT_FOUND" });
+      if (entry.source !== "manual")
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message:
+            "Faixas geradas por marcação de ponto não podem ser excluídas. Solicite um ajuste.",
+        });
       const [period] = await db
         .select()
         .from(workPeriods)

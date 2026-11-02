@@ -128,6 +128,8 @@ export const memberships = mysqlTable(
       onDelete: "set null",
     }),
     managerMembershipId: int("managerMembershipId"),
+    scheduleId: int("scheduleId"),
+    salaryCents: int("salaryCents"),
     active: int("active").default(1).notNull(),
     invitedAt: timestamp("invitedAt").defaultNow().notNull(),
     joinedAt: timestamp("joinedAt"),
@@ -180,11 +182,17 @@ export const tenantSubscriptions = mysqlTable(
       "trialing",
       "active",
       "past_due",
+      "suspended",
       "canceled",
     ])
       .default("trialing")
       .notNull(),
-    seatLimit: int("seatLimit").default(10).notNull(),
+    seatLimit: int("seatLimit").default(25).notNull(),
+    priceCents: int("priceCents").default(15000).notNull(),
+    cancelAtPeriodEnd: mysqlEnum("cancelAtPeriodEnd", ["0", "1"])
+      .default("0")
+      .notNull(),
+    canceledAt: timestamp("canceledAt"),
     trialEndsAt: timestamp("trialEndsAt"),
     currentPeriodEnd: timestamp("currentPeriodEnd"),
     notes: text("notes"),
@@ -194,6 +202,141 @@ export const tenantSubscriptions = mysqlTable(
   table => ({
     tenantUnique: uniqueIndex("tenant_subscriptions_tenant_unique").on(
       table.tenantId
+    ),
+  })
+);
+
+export const billingInvoices = mysqlTable(
+  "billing_invoices",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    tenantId: int("tenantId")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    subscriptionId: int("subscriptionId").references(
+      () => tenantSubscriptions.id,
+      { onDelete: "set null" }
+    ),
+    orderNsu: varchar("orderNsu", { length: 64 }).notNull(),
+    periodStart: date("periodStart", { mode: "string" }).notNull(),
+    periodEnd: date("periodEnd", { mode: "string" }).notNull(),
+    planCode: varchar("planCode", { length: 32 }).notNull(),
+    amountCents: int("amountCents").notNull(),
+    status: mysqlEnum("status", [
+      "pending",
+      "paid",
+      "failed",
+      "canceled",
+      "refunded",
+      "partially_refunded",
+    ])
+      .default("pending")
+      .notNull(),
+    checkoutUrl: varchar("checkoutUrl", { length: 500 }),
+    slug: varchar("slug", { length: 120 }),
+    externalTransactionId: varchar("externalTransactionId", { length: 120 }),
+    paidAmountCents: int("paidAmountCents"),
+    paidAt: timestamp("paidAt"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    orderNsuUnique: uniqueIndex("billing_invoices_order_nsu_unique").on(
+      table.orderNsu
+    ),
+    tenantStatusIdx: index("billing_invoices_tenant_status_idx").on(
+      table.tenantId,
+      table.status
+    ),
+  })
+);
+
+export const billingEvents = mysqlTable(
+  "billing_events",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    provider: varchar("provider", { length: 32 }).notNull(),
+    externalId: varchar("externalId", { length: 160 }).notNull(),
+    eventType: varchar("eventType", { length: 40 }).notNull(),
+    invoiceId: int("invoiceId").references(() => billingInvoices.id, {
+      onDelete: "set null",
+    }),
+    result: varchar("result", { length: 40 }).notNull(),
+    detail: text("detail"),
+    processedAt: timestamp("processedAt").defaultNow().notNull(),
+  },
+  table => ({
+    providerEventUnique: uniqueIndex("billing_events_provider_external_unique").on(
+      table.provider,
+      table.externalId
+    ),
+  })
+);
+
+export const platformSettings = mysqlTable(
+  "platform_settings",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    key: varchar("key", { length: 80 }).notNull(),
+    value: varchar("value", { length: 500 }).notNull(),
+    updatedByUserId: int("updatedByUserId"),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    keyUnique: uniqueIndex("platform_settings_key_unique").on(table.key),
+  })
+);
+
+export const termsAcceptances = mysqlTable(
+  "terms_acceptances",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    tenantId: int("tenantId").references(() => tenants.id, {
+      onDelete: "cascade",
+    }),
+    userId: int("userId")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    version: varchar("version", { length: 20 }).notNull(),
+    acceptedAt: timestamp("acceptedAt").defaultNow().notNull(),
+  },
+  table => ({
+    userVersionUnique: uniqueIndex("terms_acceptances_user_version_unique").on(
+      table.userId,
+      table.version
+    ),
+  })
+);
+
+export const tenantAddons = mysqlTable(
+  "tenant_addons",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    tenantId: int("tenantId")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    addonCode: varchar("addonCode", { length: 60 }).notNull(),
+    status: mysqlEnum("status", [
+      "available",
+      "needs_configuration",
+      "connection_test",
+      "active",
+      "error",
+      "suspended",
+      "disconnected",
+    ])
+      .default("available")
+      .notNull(),
+    priceCents: int("priceCents"),
+    config: json("config").$type<Record<string, string>>(),
+    enabledByMembershipId: int("enabledByMembershipId"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    tenantAddonUnique: uniqueIndex("tenant_addons_tenant_addon_unique").on(
+      table.tenantId,
+      table.addonCode
     ),
   })
 );
@@ -218,6 +361,118 @@ export const workSettings = mysqlTable(
   },
   table => ({
     tenantUnique: uniqueIndex("work_settings_tenant_unique").on(table.tenantId),
+  })
+);
+
+export const workSchedules = mysqlTable(
+  "work_schedules",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    tenantId: int("tenantId")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 120 }).notNull(),
+    // 0 = domingo … 6 = sábado, quais dias a jornada roda
+    daysOfWeek: json("daysOfWeek").$type<number[]>().notNull(),
+    // Vários blocos por dia (ex.: turno da manhã + tarde). Sem escala em minutos.
+    blocks: json("blocks").$type<{ start: string; end: string }[]>().notNull(),
+    active: int("active").default(1).notNull(),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+    updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  },
+  table => ({
+    tenantNameUnique: uniqueIndex("work_schedules_tenant_name_unique").on(
+      table.tenantId,
+      table.name
+    ),
+  })
+);
+
+export const payrollRuns = mysqlTable(
+  "payroll_runs",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    tenantId: int("tenantId")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    referenceMonth: varchar("referenceMonth", { length: 7 }).notNull(),
+    type: mysqlEnum("type", [
+      "normal",
+      "complementar",
+      "13_salario",
+      "ferias",
+    ])
+      .default("normal")
+      .notNull(),
+    status: mysqlEnum("status", ["draft", "closed", "canceled"])
+      .default("draft")
+      .notNull(),
+    grossCents: int("grossCents").default(0).notNull(),
+    totalDeductionsCents: int("totalDeductionsCents").default(0).notNull(),
+    netCents: int("netCents").default(0).notNull(),
+    employerCostCents: int("employerCostCents").default(0).notNull(),
+    itemTotal: int("itemTotal").default(0).notNull(),
+    notes: text("notes"),
+    createdByMembershipId: int("createdByMembershipId").references(
+      () => memberships.id,
+      { onDelete: "set null" }
+    ),
+    generatedAt: timestamp("generatedAt").defaultNow().notNull(),
+    closedAt: timestamp("closedAt"),
+  },
+  table => ({
+    tenantMonthTypeUnique: uniqueIndex("payroll_runs_month_unique").on(
+      table.tenantId,
+      table.referenceMonth,
+      table.type
+    ),
+    tenantIdx: index("payroll_runs_tenant_idx").on(table.tenantId),
+  })
+);
+
+export const payrollItems = mysqlTable(
+  "payroll_items",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    runId: int("runId")
+      .notNull()
+      .references(() => payrollRuns.id, { onDelete: "cascade" }),
+    tenantId: int("tenantId")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    membershipId: int("membershipId")
+      .notNull()
+      .references(() => memberships.id, { onDelete: "cascade" }),
+    baseSalaryCents: int("baseSalaryCents").default(0).notNull(),
+    workingDays: int("workingDays").default(0).notNull(),
+    expectedMinutes: int("expectedMinutes").default(0).notNull(),
+    workedMinutes: int("workedMinutes").default(0).notNull(),
+    overtimeMinutes: int("overtimeMinutes").default(0).notNull(),
+    nightMinutes: int("nightMinutes").default(0).notNull(),
+    absenceDays: int("absenceDays").default(0).notNull(),
+    absenceDeductionCents: int("absenceDeductionCents").default(0).notNull(),
+    overtimeCents: int("overtimeCents").default(0).notNull(),
+    nightAdditionCents: int("nightAdditionCents").default(0).notNull(),
+    manualAdditionsCents: int("manualAdditionsCents").default(0).notNull(),
+    manualDeductionsCents: int("manualDeductionsCents").default(0).notNull(),
+    additionsNote: varchar("additionsNote", { length: 240 }),
+    grossCents: int("grossCents").default(0).notNull(),
+    inssBaseCents: int("inssBaseCents").default(0).notNull(),
+    inssCents: int("inssCents").default(0).notNull(),
+    irrfCents: int("irrfCents").default(0).notNull(),
+    totalDeductionsCents: int("totalDeductionsCents").default(0).notNull(),
+    netCents: int("netCents").default(0).notNull(),
+    employerInssCents: int("employerInssCents").default(0).notNull(),
+    fgtsCents: int("fgtsCents").default(0).notNull(),
+    employerCostCents: int("employerCostCents").default(0).notNull(),
+    breakdown: json("breakdown").$type<Record<string, unknown>>(),
+  },
+  table => ({
+    runMemberUnique: uniqueIndex("payroll_items_run_member_unique").on(
+      table.runId,
+      table.membershipId
+    ),
+    tenantIdx: index("payroll_items_tenant_idx").on(table.tenantId),
   })
 );
 
@@ -284,6 +539,7 @@ export const workEntries = mysqlTable(
     latitude: double("latitude"),
     longitude: double("longitude"),
     customFields: json("customFields").$type<Record<string, string>>(),
+    source: varchar("source", { length: 32 }).default("manual").notNull(),
     createdAt: timestamp("createdAt").defaultNow().notNull(),
   },
   table => ({
@@ -295,6 +551,102 @@ export const workEntries = mysqlTable(
       table.tenantId,
       table.membershipId,
       table.workDate
+    ),
+  })
+);
+
+export const punchRequests = mysqlTable(
+  "punch_requests",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    tenantId: int("tenantId")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    membershipId: int("membershipId")
+      .notNull()
+      .references(() => memberships.id, { onDelete: "cascade" }),
+    workDate: date("workDate", { mode: "string" }).notNull(),
+    events: json("events")
+      .$type<{ eventType: "ENTRY" | "EXIT" | "BREAK_START" | "BREAK_END"; time: string }[]>()
+      .notNull(),
+    reason: text("reason").notNull(),
+    status: mysqlEnum("status", [
+      "pending",
+      "approved",
+      "rejected",
+      "cancelled",
+    ])
+      .default("pending")
+      .notNull(),
+    reviewedByMembershipId: int("reviewedByMembershipId").references(
+      () => memberships.id,
+      { onDelete: "set null" }
+    ),
+    reviewedAt: timestamp("reviewedAt"),
+    reviewNote: text("reviewNote"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => ({
+    tenantStatusIdx: index("punch_requests_tenant_status_idx").on(
+      table.tenantId,
+      table.status
+    ),
+    tenantMemberIdx: index("punch_requests_tenant_member_idx").on(
+      table.tenantId,
+      table.membershipId
+    ),
+  })
+);
+
+export const punchEvents = mysqlTable(
+  "punch_events",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    tenantId: int("tenantId")
+      .notNull()
+      .references(() => tenants.id, { onDelete: "cascade" }),
+    membershipId: int("membershipId")
+      .notNull()
+      .references(() => memberships.id, { onDelete: "cascade" }),
+    workDate: date("workDate", { mode: "string" }).notNull(),
+    eventType: mysqlEnum("eventType", [
+      "ENTRY",
+      "EXIT",
+      "BREAK_START",
+      "BREAK_END",
+    ]).notNull(),
+    occurredAt: timestamp("occurredAt").notNull(),
+    source: mysqlEnum("source", [
+      "web",
+      "retroactive_approval",
+      "admin_correction",
+      "import",
+    ])
+      .default("web")
+      .notNull(),
+    status: mysqlEnum("status", ["valid", "cancelled"])
+      .default("valid")
+      .notNull(),
+    note: text("note"),
+    meta: json("meta").$type<Record<string, string>>(),
+    requestId: int("requestId").references(() => punchRequests.id, {
+      onDelete: "set null",
+    }),
+    timezone: varchar("timezone", { length: 64 }).notNull(),
+    clientToken: varchar("clientToken", { length: 64 }),
+    createdByMembershipId: int("createdByMembershipId"),
+    createdAt: timestamp("createdAt").defaultNow().notNull(),
+  },
+  table => ({
+    tenantMemberDateIdx: index("punch_events_tenant_member_date_idx").on(
+      table.tenantId,
+      table.membershipId,
+      table.workDate
+    ),
+    idempotencyUnique: uniqueIndex("punch_events_idempotency_unique").on(
+      table.tenantId,
+      table.membershipId,
+      table.clientToken
     ),
   })
 );

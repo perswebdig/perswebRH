@@ -1,4 +1,4 @@
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { protectedProcedure, router } from "../_core/trpc";
@@ -8,6 +8,7 @@ import {
   memberships,
   tenantAuditLogs,
 } from "../../drizzle/schema";
+import { getSubscription } from "../billing/core";
 import {
   audit,
   canAdmin,
@@ -65,7 +66,7 @@ function splitCsvLine(line: string): string[] {
 function validateRow(row: CsvRow, index: number) {
   const errors: string[] = [];
   if (!row.name) errors.push("nome obrigatório");
-  if (!row.email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(row.email))
+  if (!row.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(row.email))
     errors.push("e-mail inválido");
   if (row.role && !["employee", "manager", "finance", "administrative"].includes(row.role))
     errors.push("perfil inválido");
@@ -98,7 +99,24 @@ export const importsRouter = router({
       const user = requireActor(ctx.user);
       const db = await database();
       const actor = await tenantAccess(db, user, input.tenantId, canAdmin);
+      const subscription = await getSubscription(db, input.tenantId);
+      const [occupied] = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(memberships)
+        .where(
+          and(
+            eq(memberships.tenantId, input.tenantId),
+            eq(memberships.active, 1)
+          )
+        );
+      const capacity = subscription.seatLimit - Number(occupied?.count ?? 0);
       const { rows } = parseCsv(input.csvText);
+      if (rows.length > capacity) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: `Espaço insuficiente no plano: limite de ${subscription.seatLimit} pessoas ativas e restam apenas ${Math.max(capacity, 0)}. Faça upgrade da assinatura para importar mais gente.`,
+        });
+      }
       const existing = await db
         .select({ email: memberships.email })
         .from(memberships)
