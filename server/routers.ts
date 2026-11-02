@@ -5,6 +5,7 @@ import { tenantsRouter } from "./routers/tenants";
 import { attendanceRouter } from "./routers/attendance";
 import { punchRouter } from "./routers/punch";
 import { billingRouter } from "./routers/billing";
+import { payrollRouter } from "./routers/payroll";
 import { reimbursementsRouter } from "./routers/reimbursements";
 import { importsRouter } from "./routers/imports";
 import { signaturesRouter } from "./routers/signatures";
@@ -17,6 +18,7 @@ export const appRouter = router({
   attendance: attendanceRouter,
   punch: punchRouter,
   billing: billingRouter,
+  payroll: payrollRouter,
   reimbursements: reimbursementsRouter,
   imports: importsRouter,
   signatures: signaturesRouter,

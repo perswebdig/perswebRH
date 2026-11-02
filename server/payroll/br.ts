@@ -23,9 +23,8 @@ export const IRRF_BRACKETS_2026: {
   { upToCents: 242880, rate: 0, deductCents: 0 },
   { upToCents: 282665, rate: 0.075, deductCents: 18216 },
   { upToCents: 375105, rate: 0.15, deductCents: 39416 },
-  { upToCents: 466468, rate: 0.195, deductCents: 67549 },
-  { upToCents: 673400, rate: 0.225, deductCents: 90873 },
-  { upToCents: Number.MAX_SAFE_INTEGER, rate: 0.275, deductCents: 105392 },
+  { upToCents: 466468, rate: 0.225, deductCents: 67549 },
+  { upToCents: Number.MAX_SAFE_INTEGER, rate: 0.275, deductCents: 90873 },
 ];
 
 export function round(cents: number) {

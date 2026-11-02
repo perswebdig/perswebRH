@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   Activity,
   ArrowRight,
+  Banknote,
   Bell,
   Building2,
   CalendarClock,
@@ -30,6 +31,7 @@ import { Attendance } from "./attendance";
 import { Reimbursements } from "./reimbursements";
 import { AdminSettings } from "./settings";
 import { BillingSettings } from "./billing";
+import { PayrollView } from "./payroll";
 
 type User = {
   id: number;
@@ -57,6 +59,7 @@ type Section =
   | "team"
   | "settings"
   | "billing"
+  | "payroll"
   | "platform";
 
 const sectionMeta: Record<
@@ -71,6 +74,7 @@ const sectionMeta: Record<
   team: { label: "Equipe", icon: Users, mobile: "Equipe" },
   settings: { label: "Configurações", icon: Settings2, mobile: "Ajustes" },
   billing: { label: "Cobrança", icon: WalletCards, mobile: "Plano" },
+  payroll: { label: "Folha de pagamento", icon: Banknote, mobile: "Folha" },
   platform: { label: "Plataforma", icon: Building2, mobile: "Plataforma" },
 };
 const roleLabels: Record<string, string> = {
@@ -186,6 +190,7 @@ export default function OrbitWorkspace({
     "reports",
     ...(admin || manager ? ["team" as const] : []),
     ...(admin ? ["settings" as const, "billing" as const] : []),
+    ...(admin || tenant.role === "finance" ? ["payroll" as const] : []),
     ...(platformAdmin ? ["platform" as const] : []),
   ];
   const changeSection = (next: Section) => {
@@ -710,6 +715,9 @@ export default function OrbitWorkspace({
               <h2>Acesso restrito</h2>
               <p>Somente administradores da empresa gerenciam a assinatura.</p>
             </div>
+          )}
+          {section === "payroll" && (admin || tenant.role === "finance") && (
+            <PayrollView tenantId={tenant.tenantId} isAdmin={admin} />
           )}
         </div>
         <footer className="app-footer">

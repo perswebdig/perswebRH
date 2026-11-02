@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { trpc } from "@/lib/trpc";
+import { JornadasPanel } from "./JornadasPanel";
 
 export function AdminSettings({ tenantId }: { tenantId: number }) {
   const query = trpc.tenants.settings.useQuery({ tenantId });
@@ -721,6 +722,7 @@ export function AdminSettings({ tenantId }: { tenantId: number }) {
               </button>
             </form>
           </section>
+          <JornadasPanel tenantId={tenantId} />
           <section className="panel settings-panel" id="team-settings">
             <div className="settings-panel-head">
               <span className="settings-icon amber">
