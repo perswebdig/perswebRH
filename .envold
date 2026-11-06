@@ -1,0 +1,16 @@
+PORT=8090
+DATABASE_URL=mysql://orbitrh:orbitrh@127.0.0.1:3306/orbitrh
+APP_ID=perswebrh
+APP_SECRET=a55e3bcd3d70549016eca5c734a2cab48870278faaeef83b3965079e80c9d517
+AUTH_MODE=local
+ALLOW_REGISTRATION=true
+STORAGE_DRIVER=local
+STORAGE_DIR=data/storage
+BILLING_SIMULATION=1
+
+# URL publica do app (links de convite, e-mails, callback)
+APP_PUBLIC_URL=https://rh.persweb.digital
+MAIL_URL_BASE=https://rh.persweb.digital
+
+# Banco de teste isolado (nunca apontar para producao)
+TEST_DATABASE_URL=mysql://orbitrh_audit:audit_only@127.0.0.1:3308/perswebrh_audit_test
